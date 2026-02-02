@@ -1,1 +1,72 @@
 JUMP IP: 10.50.12.209
+
+Filtering Example
+pipeline Get-Process |
+          Select-object name, id, path |
+where-object {$_.id -lt 1000}
+
+
+CIM:
+  namespace: ROOT\CIMV2 = CORE OS INFORMATION
+             ROOT\SECURITYCENTER2 = Security products
+  class: Win32_BIOS = what BIOS info could exist?
+         Win32_LogicalDisk = what disk info could exist?
+  instance: Your Actual BIOS version 
+
+
+for loop syntax
+
+
+
+
+
+foreach syntax
+  foreach ($item in $collection) {
+        <command>
+}
+
+
+
+pwsh profiles:
+# create or edit a profile and open in ise
+new-item -itemtype File -PATH $PROFILE -Force
+ise $PROFILE
+
+
+Transripts:
+new-alias -Name DemUsers -Value Get-LocalUser
+
+
+High level flow:
+Client (powershell) -> WinRM (WS-MAN) -> Remote Host (Powershell Session)
+
+# Session endpoint perms
+Get-PSSessionConfiguration
+# WinRM config
+winrm get winrm/config
+
+
+Remoting Commands:
+    # Scale with background jobs
+  Invoke-Command -ComputerName HostA,HostB { Get-Service } -AsJob 
+  Receive-Job <jobId>
+
+
+Remoting Security:
+  Trusted Hosts (workgroup/special cases)
+# Manage Trusted Hosts
+
+
+
+
+.NET APIs:
+
+ Namespace -> Class -> Method
+[System.Text.Encoding]::Unicode.GetBytes(
+"This might be important"
+)
+
+  Common Pattern:
+
+
+
