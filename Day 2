@@ -1,0 +1,83 @@
+Windows Registry
+
+hives -> keys -> values
+
+
+regedit.exe -> HKCU\Software\Microsoft\Windows\Currentversion\Run
+reg.exe  -> fast changes -> reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+powershell(PSDRIVES)
+
+
+
+
+
+5.4 Registry locations that can be utilized for persistence¶
+Persistence According to MITRE
+
+Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder - MITRE
+
+System-wide and per-user autoruns
+HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce
+HKU\ < SID > \Software\Microsoft\Windows\CurrentVersion\Run
+HKU\ < SID > \Software\Microsoft\Windows\CurrentVersion\RunOnce
+HKLM\SYSTEM\CurrentControlSet\services
+HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders
+HKLM\SOFTWARE\Microsoft\WindowsNT\CurrentVersion\Winlogon
+
+
+
+ADS
+
+cmd: viewing ads 
+examples dir /R displays the presence of ads
+
+syntax 
+more < reminder.txt:sercert.info
+notepad reminder.txt:sercert.info
+dir /R reminder.txt
+
+
+mkdir kids
+echo hidden data > kids:hidden.txt
+dir /R kids
+more < kids:hidden.txt
+
+
+wscript test.txt:secret.vbs
+
+dir /a /s
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
