@@ -1,1 +1,101 @@
+Linux Essentials
+
+
+Situational Awareness command set
+        syntax
+
+identify/host:
+hostname / uname -a
+whoami
+w / who
+
+Networking:
+ip addr / ifconfig
+ip neigh / arp
+ip route / route
+ss / netstat
+
+security posture:
+nft list tables /iptables -L
+sudo -l
+
+Getting help (Built-in Documentation)
+
+--help 
+
+in bash:
+set without $
+read with $
+
+example:
+a="100"
+echo $a -> 100
+
+
+$(command)
+
+Example:
+directories=$(ls/)
+echo $directories
+
+
+redirections
+save normal output:
+echo $directories > thisisanewfile
+
+
+
+cleaning output
+
+ls -Rlisa /etc
+
+
+
+For loop example
+
+objects=$(ls-d/etc/*)
+
+for item in 
+
+
+if statement
+
+target-"/etc/passwd
+
+
+
+for item in $object;do
+  if[-d"/etc/$item"];then
+    echo "$item is a directory"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
