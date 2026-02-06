@@ -1,0 +1,66 @@
+common commands 
+for disk part
+
+
+lsblk
+blkid
+sudo xxd -l 512 -g 1 /dev/vda #1
+dd if=/dev/vda of=MBRcopy bs=512 count=1  -> always mmake a copy
+
+
+GPT path
+\EFI\ubuntu\grubx64.efi
+
+lsmod 
+virtio_blk
+virtio_net
+ltrace -S cat /etc/passwd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
