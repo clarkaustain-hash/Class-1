@@ -1,0 +1,90 @@
+🐧 Linux Persistence Detection (Command Line)
+Linux persistence is largely file-based, relying on scripts that execute during system boot or user login. 
+Systemd Services & Timers: Check enabled services and timer files.
+systemctl list-unit-files --state=enabled
+ls -al /etc/systemd/system/*.service
+systemd-analyze unit-paths (to find all service paths)
+Cron Jobs & Scheduled Tasks: Inspect scheduled jobs for all users and system-wide.
+crontab -l (current user)
+crontab -u <user> -l (specific user)
+ls -al /etc/cron*
+atq (list "at" jobs)
+Login & Shell Scripts: Review scripts executed on login.
+cat ~/.bashrc, cat ~/.profile, cat ~/.bash_profile
+cat /etc/profile, cat /etc/bash.bashrc
+ls -al /etc/update-motd.d/ (Message of the Day scripts)
+Autorun File Locations (XDG): Check GUI desktop autostart files.
+ls -al ~/.config/autostart/
+ls -al /root/.config/autostart/
+SUID Binaries & Backdoors: Look for files with SUID bits set that can provide root access.
+find / -perm -4000 -type f 2>/dev/null
+Preload Hijacking: Check for shared libraries loaded before others.
+cat /etc/ld.so.preload 
+
+
+🪟 Windows Persistence Detection (CMD)
+Windows persistence heavily utilizes the Registry, Task Scheduler, and Startup folders. 
+Registry Run Keys (HKLM & HKCU): Check keys that execute programs on boot or login.
+reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run"
+reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce"
+reg query "HKLM\Software\Microsoft\Windows\CurrentVersion\Run"
+reg query "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce"
+Scheduled Tasks: List all scheduled tasks, focusing on those with suspicious names.
+schtasks /query /fo LIST /v
+Startup Folders: Check folders containing shortcuts to executables.
+dir "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
+dir "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
+Services: List services that could be abused to run malicious binaries.
+wmic service get name,displayname,pathname,startmode | findstr "Auto"
+sc query type=service
+Windows Management Instrumentation (WMI) Event Consumers: Detect persistent WMI subscriptions.
+wmic /NAMESPACE:"\\root\subscription" PATH __EventFilter GET Name,EventNamespace,QueryLanguage
+Image File Execution Options (IFEO): Used to trigger debugging processes.
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options" 
+
+
+1. Comprehensive Check (All Methods)
+The AutoRuns PowerShell module (Get-PSAutorun) is the recommended method as it checks registry, services, WMI, and DLL hijacking in one command. 
+Command: Get-PSAutorun | Out-GridView
+Note: This usually requires installing the module from PowerShell Gallery or using Sysinternals Autoruns. 
+2. Scheduled Task Persistence
+Scheduled tasks are frequently used to run payloads at startup or login. 
+List all tasks: Get-ScheduledTask | Select-Object TaskName, TaskPath, State, Author
+List tasks created/modified recently: Get-ScheduledTask | Where-Object {$_.Date -gt (Get-Date).AddDays(-30)}
+Check task registration logs: Get-WinEvent -FilterHashtable @{LogName='System';ID=4698} | Format-Table -AutoSize 
+3. Registry Run Keys (Most Common) 
+Registry keys in the HKLM and HKCU hives are common persistence locations. 
+Check HKCU Run Keys: Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run*"
+Check HKLM Run Keys: Get-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run*"
+Scan for "Run" keys recursively: Get-ChildItem -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\" -Include "Run", "RunOnce" -Recurse | Get-ItemProperty 
+4. Startup Folders 
+Files placed in these folders execute on user login. 
+User Startup: Get-ChildItem -Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+System Startup: Get-ChildItem -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup" 
+5. Services
+List all services: Get-Service | Select-Object Name, DisplayName, Status, StartType
+List non-standard services (e.g., not 'System' or 'Disabled'): Get-WmiObject -Class Win32_Service | Where-Object {$_.StartName -notlike "NT AUTHORITY*" -and $_.StartMode -eq "Auto"} | Select-Object Name, PathName, StartName 
+6. PowerShell Profile Persistence 
+Attackers may modify PowerShell profiles to execute code every time a shell is opened. 
+Check User Profile: Test-Path $PROFILE (If true, check content with notepad $PROFILE)
+Check AllUsers Profile: Test-Path $PROFILE.AllUsersAllHosts 
+7. WMI Event Subscriptions 
+List WMI consumers: Get-WMIObject -Namespace root\subscription -Class __EventConsumer
+List WMI bindings: Get-WMIObject -Namespace root\subscription -Class __FilterToConsumerBinding 
+Summary Table of Key Commands
+Type 	PowerShell Command
+All	Get-PSAutorun | Out-GridView
+Tasks	Get-ScheduledTask
+Registry	Get-ItemProperty -Path "HKCU:\...\Run"
+Startup	Get-ChildItem -Path "$env:APPDATA\...\Startup"
+Services	Get-Service
+
+
+🔍 Quick Summary Commands
+OS 	Type	Command
+Linux	Services	systemctl list-unit-files --state=enabled
+Linux	Cron	ls -la /var/spool/cron/crontabs/
+Linux	Profile	cat /etc/profile
+Windows	Registry	reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+Windows	Tasks	schtasks /query /fo LIST /v
+Windows	Startup	dir "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
