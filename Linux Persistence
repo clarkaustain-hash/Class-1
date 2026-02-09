@@ -1,0 +1,123 @@
+Core Linux Persistence Mechanisms + Detection Commands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MechanismDescription / MITRE ATT&CKDetection Commands (one-liners where possible)Cron / At / AnacronScheduled tasks (user/system) — very common (T1053.003 / T1053.001 / T1053.005)- All user crontabs: for u in $(cut -f1 -d: /etc/passwd); do crontab -u $u -l 2>/dev/null; done
+- System crons: cat /etc/crontab; ls -la /etc/cron.* /var/spool/cron/crontabs/
+- At jobs: atq; ls -la /var/spool/at/
+- Anacron: cat /etc/anacrontab; ls -la /var/spool/anacron/ /etc/cron.daily/weekly/monthly/Systemd Services / Timers / Paths / SocketsModern replacement for init scripts — extremely common (T1543.002 / T1053.006)- All unit files: systemctl list-unit-files --type=service,timer,path,socket
+- Enabled services: systemctl --type=service list-unit-files --state=enabled
+- Custom units: find /etc/systemd /usr/lib/systemd /lib/systemd /run/systemd -name '*.service' -o -name '*.timer' -o -name '*.path' -o -name '*.socket' 2>/dev/null
+- Suspicious content: `grep -rEi '(ExecStartShell Profile / RC FilesCode in .bashrc, .bash_profile, .profile, .zshrc, etc. (T1546.004)- Current user: cat ~/.bashrc ~/.bash_profile ~/.profile ~/.zshrc ~/.zprofile 2>/dev/null
+- All users: `for f in /home/* ~/.bashrc ~/.bash_profile ~/.profile ~/.zshrc /etc/profile /etc/profile.d/* /etc/bash.bashrc; do echo "$f"; grep -Evi '^\s*(#SSH Authorized KeysAdd public key for passwordless login (T1098.004)- All users: for d in /home/* /root; do [ -f "$d/.ssh/authorized_keys" ] && echo "$d/.ssh/authorized_keys" && cat "$d/.ssh/authorized_keys"; done
+- Also check: find / -name authorized_keys -type f 2>/dev/nullStartup Scripts (rc.local / init.d / rcX.d)Legacy boot scripts (T1037.004 / T1547.006)- rc.local: ls -la /etc/rc.local /etc/rc.d/rc.local; cat /etc/rc.local 2>/dev/null
+- Init.d: ls -la /etc/init.d/; find /etc/rc*.d/ -type l -ls 2>/dev/nullPAM Modules / ConfigModify PAM for backdoors (T1556.003)- PAM configs: ls -la /etc/pam.d/ /etc/pam.conf /lib*/security/
+- Custom modules: find /lib*/security/ -type f -exec md5sum {} + 2>/dev/null (compare to known good)
+- Suspicious lines: `grep -rEi 'pam_execudev RulesDevice event triggers (T1546.017)- All rules: find /etc/udev/rules.d/ /lib/udev/rules.d/ /run/udev/rules.d/ -type f -name '*.rules' 2>/dev/null
+- Suspicious content: `grep -rEi 'RUN+=LD_PRELOAD / LD_LIBRARY_PATHLibrary injection / hijacking (T1574.006 / T1574.001)- Environment: `strings /proc/*/environ 2>/dev/nullSUID / SGID BinariesMisconfigured or added SUID files for privesc/persistence- Find all: find / -type f -perm -4000 -o -perm -2000 2>/dev/null
+- Non-standard: find / -type f -perm -4000 -o -perm -2000 ! -path "/bin/*" ! -path "/usr/bin/*" ! -path "/sbin/*" ! -path "/usr/sbin/*" 2>/dev/nullKernel Modules / DriversRootkits via modules (T1547.012)- Loaded modules: lsmod
+- All modules: find /lib/modules/$(uname -r) -name '*.ko' -o -name '*.ko.xz' 2>/dev/null
+- Autoload: cat /etc/modules /etc/modules-load.d/*System-wide Environment / AliasesGlobal env vars or aliases- cat /etc/environment /etc/profile.d/* /etc/bash.bashrc
+- Aliases: `alias; cat /etc/profile.d/*XDG AutostartDesktop autostart entries (T1547.013)- ls -la /etc/xdg/autostart/ ~/.config/autostart/ /usr/share/autostart/
+- Content: grep -rEi 'Exec=' /etc/xdg/autostart/ ~/.config/autostart/ 2>/dev/nullGit HooksRepo-specific execution- Common locations: find /home /root -name hooks -type d 2>/dev/null
+- Suspicious: find / -name '*.hook' -o -name 'post-checkout' -o -name 'pre-commit' 2>/dev/null/etc/apt/apt.conf.d/Package manager hooks- ls -la /etc/apt/apt.conf.d/
+- Content: `grep -rEi 'DPkg::Post-Invoke
+Quick "Suspicious Everything" One-Liners (run as root)
+Bash# All cron-like things
+(for u in $(cut -f1 -d: /etc/passwd); do echo "Crontab $u"; crontab -u $u -l 2>/dev/null; done; cat /etc/crontab; ls -la /etc/cron.* /var/spool/cron/) 2>/dev/null
+
+# All systemd custom units
+find /etc/systemd /usr/lib/systemd /run/systemd -type f -name '*.service' -o -name '*.timer' -exec grep -H Exec {} + 2>/dev/null
+
+# Shell profiles + SSH keys + .ssh dirs
+(for d in /root /home/*; do echo "$d"; [ -d "$d/.ssh" ] && cat "$d/.ssh/authorized_keys" 2>/dev/null; cat "$d"/.{bash,zsh}{rc,_profile,_login} 2>/dev/null; done) 2>/dev/null
+
+# udev + PAM + LD_PRELOAD
+(find /etc/udev/rules.d/ /lib/udev/rules.d/ -type f -exec grep -H RUN {} +; grep -rEi 'pam_exec|pam_script' /etc/pam.d/; grep -rEi 'LD_PRELOAD|LD_LIBRARY_PATH' /etc/ /home/*/.bashrc* 2>/dev/null) 2>/dev/null
+
+# Strange SUID + world-writable
+(find / -type f -perm -4000 -o -perm -2000 -o -perm -0002 2>/dev/null | grep -vE '^/(usr|bin|sbin|lib)') 2>/dev/null
+Additional Tips
+
+Baseline first — Run these on a clean system to know what is normal.
+Auditd / Sysmon for Linux — Enable them to log file writes to /etc/crontab, /etc/systemd/, .ssh/authorized_keys, etc.
+File integrity monitoring — Use AIDE, Tripwire, or OSSEC to watch critical directories.
+Reboot test — After cleaning, reboot and check ps auxf, netstat -tuln, ss -tuln, last, w for surprises.
+Rootkits — Run rkhunter --check, chkrootkit, or lynis audit system.
