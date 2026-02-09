@@ -1,0 +1,191 @@
+Common Windows Persistence Mechanisms and Detection Commands
+Persistence mechanisms allow programs (including malware) to automatically execute on system boot, user logon, or other triggers. Below is a comprehensive list of major persistence techniques on Windows, based on standard cybersecurity practices. I've focused on native tools like Command Prompt, PowerShell, and Registry queries for detection. For more advanced or exhaustive checks, tools like Sysinternals Autoruns (free from Microsoft) are recommended, as they aggregate many of these in one place—download and run autoruns.exe or autorunsc.exe -a * for a full scan.
+I'll structure this as a table for clarity, listing the mechanism, description, and full detection commands. Run these with administrator privileges where needed (e.g., via elevated Command Prompt or PowerShell). Note: These commands output data you need to review for suspicious entries (e.g., unknown paths, executables, or commands). Always compare against a known good baseline.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MechanismDescriptionDetection CommandsRegistry Run KeysPrograms auto-run on user logon or system boot via registry entries.- Command Prompt: reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+- reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+- reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+- reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+- For 64-bit: Add HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run
+- PowerShell: Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run (repeat for other keys)Startup FoldersFiles (.exe, .bat, shortcuts) in startup directories execute on logon.- Command Prompt: dir "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp" (all users)
+- dir "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup" (current user)
+- PowerShell: Get-ChildItem "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp" (repeat for user path)Scheduled TasksTasks set to run at intervals, boot, or logon via Task Scheduler.- Command Prompt: schtasks /query /fo LIST /v (detailed list)
+- PowerShell: Get-ScheduledTask | Format-List
+- Registry: reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks"
+- XML files: dir /s /b C:\Windows\System32\TasksWindows ServicesServices auto-start as drivers or processes.- Command Prompt: sc query (list all)
+- services.msc (GUI view)
+- PowerShell: Get-Service | Format-List Name, DisplayName, StartType, Status
+- Registry: reg query HKLM\SYSTEM\CurrentControlSet\ServicesWMI Event SubscriptionsPersistent WMI filters, consumers, and bindings for event-triggered execution.- Command Prompt: wmic /NAMESPACE:\\root\subscription PATH __EventFilter GET /FORMAT:LIST
+- wmic /NAMESPACE:\\root\subscription PATH __EventConsumer GET /FORMAT:LIST
+- wmic /NAMESPACE:\\root\subscription PATH __FilterToConsumerBinding GET /FORMAT:LIST
+- PowerShell: Get-WmiObject -Namespace root\subscription -Class __EventFilter (repeat for Consumer and Binding)Winlogon KeysModifies shell, userinit, or notify for logon execution (e.g., Userinit, Shell).- Command Prompt: reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
+- PowerShell: Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"Image File Execution Options (IFEO)Debugger entries hijack executables for persistence.- Command Prompt: reg query HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options
+- PowerShell: Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options" -RecurseAppInit DLLsDLLs loaded into every process using User32.dll.- Command Prompt: reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v LoadAppInit_DLLs
+- reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs
+- PowerShell: Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows"Accessibility FeaturesBackdoors via sethc.exe (Sticky Keys), utilman.exe, etc.- Command Prompt: reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\sethc.exe" (repeat for utilman.exe, osk.exe, magnify.exe, narrator.exe, displayswitch.exe)
+- PowerShell: Check file replacements: Get-FileHash C:\Windows\System32\sethc.exe (compare hash to known good)Boot Execute / AutorunsNative images or commands run at boot.- Command Prompt: reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager" /v BootExecute
+- PowerShell: Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager"BITS JobsBackground Intelligent Transfer Service jobs for persistent downloads/execution.- PowerShell: Get-BitsTransfer -AllUsers | Select-Object JobId, DisplayName, FileList
+- Command Prompt: bitsadmin /list /allusers /verboseLogon ScriptsScripts run at user logon via Group Policy or registry.- Command Prompt: reg query "HKCU\Environment" /v UserInitMprLogonScript
+- Check files: dir C:\Windows\System32\GroupPolicy\User\Scripts\Logon
+- PowerShell: Get-GPRegistryValue -Name "Default Domain Policy" -Key "HKCU\Environment" (if domain-joined)Office Application StartupAdd-ins or macros in Office apps.- Registry: reg query HKCU\SOFTWARE\Microsoft\Office\Word\Addins (repeat for Excel, PowerPoint, etc.)
+- PowerShell: Get-ChildItem "HKCU:\SOFTWARE\Microsoft\Office\*\Addins"Browser Helper Objects (BHOs)Extensions loaded into browsers.- Registry: reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Browser Helper Objects
+- PowerShell: Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Browser Helper Objects"DriversKernel-mode drivers loaded at boot.- Command Prompt: driverquery /si
+- PowerShell: Get-WmiObject Win32_SystemDriver | Select Name, DisplayName, State, StatusCOM HijackingHijacked Component Object Model entries.- Registry: reg query HKCR\CLSID (broad; look for InprocServer32 modifications)
+- Use tools like Autoruns for better filtering.
+Additional Tips
+
+Full System Scan: Use autorunsc.exe -a * -c -h (from Sysinternals) to export all autoruns to CSV for review.
+Event Logs: Check for creations via wevtutil qe Microsoft-Windows-Sysmon/Operational /q:"*[System/EventID=13]" (if Sysmon installed) for registry changes.
+PowerShell Module: Install and run Get-PSAutorun from PSGallery for a one-stop check: Install-Module -Name PSAutoRun; Get-PSAutorun.
+Monitoring: Use Procmon (Sysinternals) with filters for registry writes: Run procmon.exe, set filter to "Operation is RegSetValue".
+This isn't exhaustive (Windows has hundreds of ASEPs), but covers 90%+ of real-world cases. For removal, delete suspicious entries carefully—backup first with reg export HKLM backup.reg. If unsure, consult a professional.
+
+
+
+
+
+Why Get-CimInstance Matters for Persistence Detection
+
+Many attackers prefer WMI subscriptions over registry Run keys because they're harder to spot with basic tools.
+Get-CimInstance lets you directly query the WMI repository (especially the root\subscription namespace) to find suspicious __EventFilter, __EventConsumer, and __FilterToConsumerBinding objects.
+It is the preferred way over Get-WmiObject (which is deprecated in newer PowerShell versions).
+
+Key Commands to Hunt WMI Persistence with Get-CimInstance
+Run these in an elevated PowerShell prompt. They focus on the subscription namespace where persistence lives.
+
+List all Event Filters (the trigger conditions)PowerShellGet-CimInstance -Namespace root\subscription -ClassName __EventFilter
+Look for suspicious Name, Query, or EventNamespace values (e.g., anything referencing unusual processes, logons, or file paths).
+
+List all Event Consumers (the payload/action that runs)PowerShellGet-CimInstance -Namespace root\subscription -ClassName __EventConsumer
+This returns generic objects. Pipe to see concrete types:PowerShellGet-CimInstance -Namespace root\subscription -ClassName __EventConsumer | Select-Object __CLASS, Name, @{Name="Command";Expression={$_.CommandLineTemplate}}, @{Name="Script";Expression={$_.ScriptText}}
+Suspicious types include:
+CommandLineEventConsumer → runs cmd.exe, powershell.exe, etc.
+ActiveScriptEventConsumer → runs VBS/JScript
+ScriptingEventConsumer variants
+
+Specific consumer classes (more readable):PowerShellGet-CimInstance -Namespace root\subscription -ClassName CommandLineEventConsumer
+Get-CimInstance -Namespace root\subscription -ClassName ActiveScriptEventConsumer
+List Bindings (connects filter to consumer — this is what actually activates persistence)PowerShellGet-CimInstance -Namespace root\subscription -ClassName __FilterToConsumerBinding
+Critical: If you see a binding between a suspicious filter and a suspicious consumer, that's active persistence.
+
+One-liner to show the full picture (most useful)PowerShellGet-CimInstance -Namespace root\subscription -ClassName __EventFilter |
+    ForEach-Object {
+        $filter = $_
+        $$   binding = Get-CimInstance -Namespace root\subscription -ClassName __FilterToConsumerBinding -Filter "Filter = ""   $$($filter.__PATH)"""
+        if ($binding) {
+            $consumer = Get-CimInstance -Namespace root\subscription -Query "SELECT * FROM $($$   binding.Consumer.Split('=')[1].TrimStart('"').TrimEnd('"')) WHERE __PATH = '   $$($binding.Consumer)'"
+            [PSCustomObject]@{
+                FilterName   = $filter.Name
+                Query        = $filter.Query
+                ConsumerName = $consumer.Name
+                ConsumerType = $consumer.__CLASS
+                Command      = if ($consumer.__CLASS -eq 'CommandLineEventConsumer') { $consumer.CommandLineTemplate }
+                               elseif ($consumer.__CLASS -eq 'ActiveScriptEventConsumer') { $consumer.ScriptText }
+            }
+        }
+    } | Format-Table -AutoSize
+Quick suspicious filter search (common malicious patterns)PowerShellGet-CimInstance -Namespace root\subscription -ClassName __EventFilter | Where-Object { $_.Query -match "SELECT|__InstanceCreationEvent|Win32_Process" -or $_.Name -notmatch "^Microsoft|Windows" }
+
+Other Useful Get-CimInstance Queries for Persistence Hunting
+While not directly for WMI subscriptions, these help spot related artifacts:
+
+Running processes (malware might show up here):PowerShellGet-CimInstance Win32_Process | Select Name, CommandLine, ProcessId | Sort Name
+Installed services (some persistence uses services):PowerShellGet-CimInstance Win32_Service | Where-Object { $_.StartMode -eq "Auto" } | Select Name, PathName, State
+Autorun-like registry keys via WMI (less common, but possible):PowerShellInvoke-CimMethod -Namespace root\default -ClassName StdRegProv -MethodName GetStringValue -Arguments @{hDefKey=2147483650; sSubKeyName="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; sValueName="SomeKey"}
+
+Comparison: Get-CimInstance vs Older Methods
+
+Get-WmiObject → works, but deprecated; use Get-CimInstance instead.
+wmic → still works: wmic /NAMESPACE:\\root\subscription PATH __EventFilter GET /FORMAT:LIST
+Autoruns (Sysinternals) → has a dedicated WMI tab that shows these subscriptions graphically — often the easiest way to spot and delete them.
+
+
