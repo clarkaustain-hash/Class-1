@@ -1,6 +1,4 @@
 Common Windows Persistence Mechanisms and Detection Commands
-Persistence mechanisms allow programs (including malware) to automatically execute on system boot, user logon, or other triggers. Below is a comprehensive list of major persistence techniques on Windows, based on standard cybersecurity practices. I've focused on native tools like Command Prompt, PowerShell, and Registry queries for detection. For more advanced or exhaustive checks, tools like Sysinternals Autoruns (free from Microsoft) are recommended, as they aggregate many of these in one place—download and run autoruns.exe or autorunsc.exe -a * for a full scan.
-I'll structure this as a table for clarity, listing the mechanism, description, and full detection commands. Run these with administrator privileges where needed (e.g., via elevated Command Prompt or PowerShell). Note: These commands output data you need to review for suspicious entries (e.g., unknown paths, executables, or commands). Always compare against a known good baseline.
 
 
 
