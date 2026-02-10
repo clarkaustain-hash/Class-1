@@ -1,12 +1,17 @@
 
 
+ps --no-headers -o pid --ppid 1 | wc -l
 
 
+Identify the names of the orphan processes on the SysV system.
+
+NOTE: Remember, orphan processes spawn and die periodically. Try monitoring the processes list with top or htop to find them.
 
 
+cgmanager,cron,dbusdaemon,dhclient,getty,irqbalance,netstat,nscd,ntpd,rsyslogd,sauron,sshd,systemdlogind,systemdudevd
 
 
-
+check inittab please for the love of god
 
 
 
