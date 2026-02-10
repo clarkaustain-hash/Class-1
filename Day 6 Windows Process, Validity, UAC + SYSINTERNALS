@@ -1,1 +1,58 @@
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+User Account Control:
+
+
+
+
+
+
+sigcheck -m C:\Windows\System32\slui.exe
+sigcheck -m C:\Windows\regedit.exe
+sigcheck -s C:\Windows\Systm32\*.exe | findstr /i autoelevate
+
+
+
+
+Registry Expliot Path
+HKCU\Software\Classes\ms-settings\shell\open\command
+
+
+Delegate Execute -> Used for hijacking
+
+
+Windows Sysinternals Tools:
+
+New-PSDrive -Name "SysInt"
+
+
+
+
+
+
+
+
+
+
+
+
+
