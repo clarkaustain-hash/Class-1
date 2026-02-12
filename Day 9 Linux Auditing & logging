@@ -1,25 +1,27 @@
 
+grep "Failed password" /var/log/auth.log
+
+dont cat Journald logs  -> use journalctl -xe or -u <search term> ex. ssh
+journalctl -u ssh.service -since "2 days ago"
 
 
 
+syslog daemon:
+
+/etc/rsyslog.conf
+/etc/rsyslog.d/
+facility.severity -> /path/to/log
+auth,authpriv.*  -/var/
+
+ls /var/log/auth.log*
+
+for querying xml logs -> use xpath, siem, ingestion
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+grep 
+journalctl -u
+journalctl -since
+journalctl -b
 
 
 
