@@ -1,0 +1,85 @@
+HKCU:\<sid>
+Get-LocalUSer
+Get-WMIObject
+
+HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist\{GUID}\Count -> UserAssist
+
+HKEY_USERS\* check every logged on user
+
+  Bam -> what actually ran on this system?
+HKLM\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings -> new BAM
+
+HKLM\SYSTEM\CurrentControlSet\Services\bam\UserSettings -> old BAM
+
+forms of persistance
+  services
+  reg keys
+  powershell profiles -> bashprofiles
+  schedule tasks
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
