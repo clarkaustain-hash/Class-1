@@ -23,6 +23,7 @@ journalctl -u
 journalctl -since
 journalctl -b
 
+xpath -q -e "//host[ports/port/state/@state='open'] /address/@addr | //port[state/@state='open']/@portid " /home/garviel/output.xml | md5sum
 
 
 
