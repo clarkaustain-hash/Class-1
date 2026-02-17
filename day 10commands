@@ -1,0 +1,2 @@
+filter ad accounts based on description powershell
+Get-ADUser -Properties Description -Filter 'Description -like "*"' | Select Name, SamAccountName, Description
