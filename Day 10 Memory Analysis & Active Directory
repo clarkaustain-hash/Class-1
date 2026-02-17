@@ -1,1 +1,56 @@
+core plugins & persistance insights
+key plugins
+pslist
+psscan
+pstree
+procdump
+connections / connscan
+
+
+echo $USERDOMAIN$
+
+
+
+
+Load AD module (RSAT/DC) -> Import-Module ActiveDirectory
+Get-Command -Module ActiveDirectory
+
++
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
