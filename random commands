@@ -1,0 +1,19 @@
+ $Home/paths
+  691  ls
+  692  cat paths | find . -type f -exec grep -qFf /tmp/system_binaries.txt {} \; -print
+  693  find . -type f -exec grep -qFf /tmp/system_binaries.txt {} \; -print
+  694  cat /tmp/system_binaries.txt
+  695  diff paths /tmp/system_binaries.txt
+  696  diff -u paths /tmp/system_binaries.txt
+  697  diff -y paths /tmp/system_binaries.txt
+  698  sed 's/flag:{.*}//; s/^[ \t]*//; s/[ \t]*$//' path | sort -u
+  699  sed 's/flag:{.*}//; s/^[ \t]*//; s/[ \t]*$//' paths | sort -u
+  700  sed 's/flag:{.*}//; s/^[ \t]*//; s/[ \t]*$//' paths | sort -u > compare.txt
+  701  cat compare.txt
+  702  diff compare.txt /tmp/system_binaries.txt
+  703  comm -12 compare.txt /tmp/system_binaries.txt
+  704  sort compare.txt > sort1file.txt
+  705  sort /tmp/system_binaries.txt > sort2file.txt
+  706  com -12 sort1file.txt sort2file.txt
+  707  comm -12 sort1file.txt sort2file.txt
+  708  cat paths | grep python3
