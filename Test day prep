@@ -8,11 +8,6 @@ Check connections with TCPView
 enable Sysmon for deeper/long-term logging
 
 
-
-
-
-
-
 Windows Persistence Paths/Locations
 
 HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
@@ -36,26 +31,6 @@ C:\Windows\System32\sethc.exe
 C:\Windows\System32\utilman.exe
 C:\Windows\System32\magnify.exe
 HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -97,8 +72,6 @@ Linux Persistence Paths/Locations
 /lib/security/
 /etc/passwd
 /etc/shadow
-
-
 
 
 Order of Volatility (from RFC 3227 – collect in this order!)
