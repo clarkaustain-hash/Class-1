@@ -103,6 +103,14 @@ Linux Persistence Paths/Locations
 /etc/passwd
 /etc/shadow
 
+netstat -tulpn | grep LISTEN
+sudo lsof -i :9999
+ps -ef $PPID 1969
+
+
+
+
+
 
 Order of Volatility (from RFC 3227 – collect in this order!)
 
