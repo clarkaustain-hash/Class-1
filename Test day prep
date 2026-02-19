@@ -1,18 +1,19 @@
 Persistence by the days
 
-day 1: Powershell Profiles ->$PSHOME
-day 2:
-day 3:
-day 4:
-day 5:
-day 6:
-day 7:
-day 8:
-day 9:
-day 10:
-
-
-
+Powershell Profiles ->$PSHOME\Profile.ps1 Section 3
+Windows Registry -> All Keys
+Windows Alternate Data Streams ->
+Linux Essentials -> 1.1.1 Situational Awareness
+Windows Boot Process -> BCDEdit
+Linux Boot Process -> MBR, GRUD, SysV, SystemD, Post Boot, Service & Target Units, /etc/environment, /etc/profile, .bash_profile, .bashrc
+Windows Process Validity -> Services, Scheduled tasks -use gui via task scheduler , network connections -> random high ports that repeat, Autorun Registry locations
+User Account Control -> 
+Windows SysInternal Tools -> in notes 
+Linux Process Validity -> htop command, section 5.2 Signals -> /sbin/init, section 6.3.1 Interracting with linux services, cron jobs
+Windows Auditing & Logging -> Artifacts, UserAssist, BAM, Recycle Bin 4.2 Demo look $R not I for metadata, Prefetch, Jump Lists, Recent Files, Browser Artifacts
+Linux Auditing & Logging -> Syslog, /etc/rsyslog, /var/log
+Memory Analysis -> 
+Active Directory Enumeration -> Initial Recon
 
 
 sysinternal tools setup
@@ -52,7 +53,8 @@ HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
 
 
 Linux Persistence Paths/Locations
-
+/var/log
+/etc/rsyslog
 /etc/crontab
 /etc/cron.d/
 /etc/cron.hourly/
