@@ -14,6 +14,11 @@ Windows Auditing & Logging -> Artifacts, UserAssist, BAM, Recycle Bin 4.2 Demo l
 Linux Auditing & Logging -> Syslog, /etc/rsyslog, /var/log
 Memory Analysis -> 
 Active Directory Enumeration -> Initial Recon
+Get-Get-ADUser -Identity "Isiah.Jesus" -Properties * | Format-List
+AdGroupMember -identity "Domain Admins" -Recursive | %{Get-ADUser -identity $_.DistinguishedName} | select name, Enabled
+Get-LocalUser | Where-Object { $_.Name -like "isiah*" }
+Get-ADUser | findstr "wis"
+Get-LocalUser | Where-Object { $_.Name -like "tiff*" }
 
 
 sysinternal tools setup
