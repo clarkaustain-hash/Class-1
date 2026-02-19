@@ -203,6 +203,20 @@ Find by email: Get-ADUser -Filter {Mail -eq 'user@domain.com'} -Properties Name,
 Password never expires: Search-ADAccount -PasswordNeverExpires | Where Enabled
 Reversible encryption: Get-ADUser -Filter 'userAccountControl -band 128'
 
+filter ad accounts based on description powershell
+Get-ADUser -Properties Description -Filter 'Description -like "*"' | Select Name, SamAccountName, Description
+
+find two accounts with password not expire
+Get-ADUser -Filter 'PasswordNeverExpires -eq $true -and Enabled -eq $true -and Name -ne "andy.dwyer"' -Properties PasswordNeverExpires | Select-Object Name, DistinguishedName
+
+
+one account with reversiblie encryption enable
+Get-ADUser -Filter 'DoesNotRequirePreAuth -eq $true' -Properties DoesNotRequirePreAuth | Select-Object Name, DistinguishedName
+# Alternatively, to check specifically for reversible encryption set via policy (requires checking userAccountControl flags):
+Get-ADUser -Filter 'UserAccountControl -band 128' -Properties UserAccountControl | Select-Object Name, DistinguishedName
+
+> Get-LocalUser | Where-Object { $_.Name -like "tiff*" }
+
 
 
 
