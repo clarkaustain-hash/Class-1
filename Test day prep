@@ -326,7 +326,161 @@ netstat/ss + ps auxf + recent executables in /tmp /dev/shm
 Run these as root/admin. Pipe to | grep -iE "suspicious|http|tcp|127|169|curl|wget|nc|bash|python"
 
 
+WINDOWS – CRITICAL COMMANDS
+PowerShell
+# 1. AUTORUNS (The Nuclear Option – run as admin first)
+# Download Sysinternals Autoruns → hide Microsoft entries → examine everything else
 
+# 2. RUN/RUNONCE KEYS (99% of basic persistence)
+Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+Get-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+Get-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+
+# 3. SERVICES (Kernel persistence – look for unsigned/odd paths)
+Get-CimInstance Win32_Service | Where {$_.PathName -notlike "*\Windows\*"} | Select Name, PathName, StartName
+
+# 4. SCHEDULED TASKS (High-privilege stealth)
+Get-ScheduledTask | Where {$_.TaskPath -notlike "\Microsoft\Windows\*"} | Select TaskName, State, Author, @{N="Action";E={$_.Actions.Execute}}
+
+# 5. WMI EVENT SUBSCRIPTIONS (Disk-less, stealthy)
+Get-WmiObject -Namespace root\subscription -Class __EventFilter | Select Name, Query
+Get-WmiObject -Namespace root\subscription -Class __EventConsumer | Select Name, CommandLineTemplate
+
+# 6. POWERSHELL PROFILES (Silent logon scripts)
+$PROFILE | Format-List *
+Get-Content $PROFILE -ErrorAction SilentlyContinue
+Get-ChildItem "$env:ProgramFiles\WindowsPowerShell\Modules" -Recurse -Include "profile.ps1" 2>/dev/null
+
+# 7. STARTUP FOLDERS
+Get-ChildItem "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
+Get-ChildItem "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+
+# 8. CRITICAL REGISTRY KEYS
+Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name Userinit, Shell
+Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" -Name AppInit_DLLs
+Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -Name BootExecute
+
+# 9. IMAGE FILE EXECUTION OPTIONS (Debugger hijacking)
+Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options"
+
+# 10. ALTERNATE DATA STREAMS (Hidden payloads)
+Get-ChildItem C:\ -Recurse -Stream * | Where Stream -ne ":$DATA"
+
+# 11. ACTIVE CONNECTIONS + PROCESS CORRELATION
+Get-NetTCPConnection -State Established,Listen | Select LocalPort, RemoteAddress, OwningProcess
+Get-Process -Id <PID>  # Match to above
+
+# 12. SUSPICIOUS PROCESSES (Not from Windows/Program Files)
+Get-Process | Where Path -notlike "*\Windows\*" -and Path -notlike "*\Program Files*" | Select Name, Path
+LINUX – CRITICAL COMMANDS
+bash
+# 1. SYSTEMD SERVICES (Most persistent today)
+systemctl list-unit-files --type=service | grep enabled
+systemctl list-units --type=service --state=running
+find /etc/systemd /usr/lib/systemd -type f -name "*.service" | xargs grep -l "ExecStart"
+
+# 2. CRON/ANACRON (Classic – check ALL users)
+crontab -l -u root
+for u in $(cut -f1 -d: /etc/passwd); do crontab -l -u $u 2>/dev/null; done
+ls -la /etc/cron* /var/spool/cron/ /var/spool/anacron/
+
+# 3. SHELL PROFILES (Logon persistence – RC FILES)
+cat ~/.bashrc ~/.bash_profile ~/.zshrc /etc/profile /etc/bash.bashrc
+grep -rE "wget|curl|nc|bash -i|python" /etc/profile.d/ ~/.bash* /etc/bashrc
+
+# 4. SSH AUTHORIZED_KEYS (Backdoor accounts)
+find /home /root -name "authorized_keys" -exec cat {} \;
+awk -F: '$3 >= 1000 {print $1}' /etc/passwd | while read u; do cat /home/$u/.ssh/authorized_keys 2>/dev/null; done
+
+# 5. INIT.D / RC SCRIPTS (Legacy init)
+cat /etc/init.d/* /etc/rc.local
+
+# 6. PAM & SUDOERS (Privilege persistence)
+cat /etc/pam.d/*
+visudo -c; cat /etc/sudoers /etc/sudoers.d/*
+
+# 7. LD_PRELOAD & KERNEL MODULES (Rootkit level)
+cat /etc/ld.so.preload
+lsmod
+find /lib /usr/lib -name "*.so" -mtime -7
+
+# 8. NETWORK + PROCESS HUNT
+netstat -tulpn | grep LISTEN
+ss -tulpn
+lsof -i -P -n | grep ESTABLISHED
+ps auxf | grep -E "nc|netcat|bash -i|python -c"
+
+# 9. SUSPICIOUS TEMP FILES (Recent executables)
+find /tmp /var/tmp /dev/shm -type f -executable -mtime -3
+ls -la /tmp /var/tmp /dev/shm
+
+# 10. BOOT PERSISTENCE (GRUB, init parameters)
+cat /boot/grub/grub.cfg | grep -i "linux"
+cat /etc/rc.local
+systemctl get-default
+UNIVERSAL FASTEST SWEEP (5-MIN HUNT)
+Windows (Admin PowerShell):
+PowerShell
+# Just run these in order
+Autoruns.exe  # GUI – visual scan (fastest)
+Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+Get-ScheduledTask | Where {$_.TaskPath -notlike "\Microsoft\Windows\*"}
+Get-CimInstance Win32_Service | Where {$_.PathName -notlike "*\Windows\*"}
+Get-NetTCPConnection -State Established,Listen
+Linux (sudo/root):
+bash
+systemctl list-unit-files --type=service | grep enabled
+crontab -l -u root && for u in $(cut -f1 -d: /etc/passwd); do crontab -l -u $u 2>/dev/null; done
+cat ~/.bashrc ~/.bash_profile /etc/profile
+find /home /root -name "authorized_keys" -exec cat {} \;
+netstat -tulpn | grep LISTEN
+RED FLAGS TO HUNT:
+❌ Unsigned binaries in System32
+❌ %temp%, %appdata%, C:\Users paths in Run keys / Services
+❌ Unusual process parents (svchost spawning cmd.exe)
+❌ High-numbered listening ports repeating
+❌ Recently modified .so files in /lib /usr/lib
+❌ Scripts in shell profiles doing network calls
+❌ Disabled-but-enabled accounts in AD
+❌ WMI subscriptions (query for powershell/cmd)
+Bottom line: Autoruns (Windows) + systemd/cron sweep (Linux) catches 90% of persistence in seconds.
+
+Make these code changes?
+persistence-hunting-commands.md
+
+md
+# God-Tier Persistence Hunting Commands
+
+## Overview
+Persistence hunting is a crucial aspect of threat hunting, enabling security professionals to identify and mitigate threats that could maintain persistence in a network. Here are some essential commands to aid in persistence hunting.
+
+## Commands
+
+1. **PowerShell:**  
+   Use the following command to list scheduled tasks:
+   ```powershell
+   Get-ScheduledTask | where {$_.State -eq "Ready"}
+Windows Services:
+Identify services that may be set to auto-start:
+
+PowerShell
+Get-Service | Where-Object { $_.StartType -eq 'Automatic' }
+Registry Keys:
+Check for autorun registry keys:
+
+PowerShell
+Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Run
+Startup Folder:
+List files in the startup folder:
+
+PowerShell
+Get-ChildItem -Path C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
+WMI Queries:
+Use WMI to identify potential persistence mechanisms:
+
+PowerShell
+Get-WmiObject -Query "SELECT * FROM Win32_StartupCommand"
 
 
 
