@@ -19,7 +19,7 @@ AdGroupMember -identity "Domain Admins" -Recursive | %{Get-ADUser -identity $_.D
 Get-LocalUser | Where-Object { $_.Name -like "isiah*" }
 Get-ADUser | findstr "wis"
 Get-LocalUser | Where-Object { $_.Name -like "tiff*" }
-
+Get-Service -Name "mpssvc" | Get-Member
 
 sysinternal tools setup
 Recommended workflow for persistence/malware hunt:
