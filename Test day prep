@@ -1,3 +1,18 @@
+sysinternal tools setup
+Recommended workflow for persistence/malware hunt:
+
+Run Autoruns first → identify suspicious autostarts
+Use Process Explorer to inspect those processes live
+Fire up ProcMon (with filters) to watch what they do
+Check connections with TCPView
+enable Sysmon for deeper/long-term logging
+
+
+
+
+
+
+
 Windows Persistence Paths/Locations
 
 HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
@@ -86,7 +101,134 @@ Linux Persistence Paths/Locations
 
 
 
+Order of Volatility (from RFC 3227 – collect in this order!)
 
+Registers, CPU cache
+Routing table, ARP cache, process table, kernel stats, memory (RAM)
+Temporary file systems (e.g. RAM disks, /tmp in some cases)
+Disk (persistent storage)
+Remote logging and monitoring data
+Physical configuration, network topology
+Archival media (backups, tapes – least volatile)
+
+Always collect most volatile first to avoid losing evidence.
+Windows Persistence & Hunting Commands
+File & Directory Searches
+
+dir /R → Recursive directory listing
+dir /a /s searchterm* → Search for files/folders (including hidden) recursively
+more < filename → View contents (works on some hidden/alternate streams)
+Alternate Data Streams (ADS):
+echo "hidden data" > normalfile.txt:HiddenInfo.txt
+Get-Content reminder.txt -Stream secret.info
+
+
+Registry & Boot Config
+
+Get-Item → View specific registry key + properties
+reg query HKLM\... → Query registry
+Boot Configuration Data (BCD):
+bcdedit → View boot config
+bcdedit /export C:\backup\BCD → Backup current BCD
+bcdedit /import C:\backup\BCD → Restore
+bcdedit /deletevalue {current} valuename → Remove value
+
+MBR boot signature check (on Linux): sudo xxd -l 512 -g 1 /dev/sda
+
+Services & Processes
+
+Get-CimInstance -ClassName Win32_Service | Select DisplayName → List services
+Get-Service name | Format-List * → Full service details
+sc query / sc queryex type= service state= all → All services (running/stopped)
+sc qdescription <service> → Service description
+tasklist /m → Processes + loaded DLLs
+Get-Process / Get-Process | Select Name, Id, Description | Sort Id | more
+netstat -ano → Connections, listening ports, owning PID
+Get-NetTCPConnection -State Established,Listen → Active/listening TCP
+Get-NetTCPConnection | Select LocalPort, RemoteAddress, State, OwningProcess
+Get-Process -Id <PID>
+
+Auto-Start / Run Keys (Persistence at Logon)
+
+HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+Per-user: HKU<SID>\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+Services (registry-backed): HKLM\SYSTEM\CurrentControlSet\Services
+
+PowerShell Profiles (Persistence via $PROFILE)
+
+$PROFILE → Current user's profile script path
+Common profiles:
+AllUsersAllHosts
+AllUsersCurrentHost
+CurrentUserCurrentHost
+CurrentUserAllHost
+Always check profiles — they can run scripts on load.
+
+Other Windows Artifacts
+
+Prefetch: C:\Windows\Prefetch — First-run evidence
+RecentDocs: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs
+Jump Lists & AppData\Roaming → Frequent/recent apps & files
+Event Logs: Get-EventLog, Get-WinEvent, wevtutil
+Key IDs: 4103 (verbose cmd), 4104 (script block), 4105/4106 (engine start/stop)
+Auditing: auditpol /get /category:*
+
+Linux Persistence & Hunting Commands
+Boot & Init
+
+GRUB: /boot/grub/grub.cfg, /boot/grub/x86_64-efi/normal.mod
+Init: /etc/inittab, /etc/rc#.d/ (runlevel scripts)
+Kernel modules: lsmod
+Systemd: /lib/systemd/system/, systemctl list-units --type=service, systemctl list-timers --all
+
+Processes & Services
+
+ps --ppid 2 -lf | head → Processes from init/systemd (PID 1 or 2)
+top / htop → Interactive (sort by PID, look for orphans)
+/proc/<PID>/exe → Inspect running binary
+sudo lsof -i :<port> → Port → process
+sudo lsof -p <PID> → Open files by PID
+netstat -tulpn → Listening ports + PID/program
+netstat -tulpn | grep -E ':(80|443)' → Suspicious web servers
+
+Logs
+
+journalctl -e → Recent entries
+journalctl -u ssh.service → Filter by unit
+journalctl -b → Current boot
+journalctl --since "2 days ago"
+
+General Tools (Sysinternals & Others – Windows)
+
+AutoRuns → Best for boot/startup persistence (registry + files)
+Process Monitor → PPID & behavior tracking
+TCPView → Network connections
+Process Explorer → Detailed process info
+PsExec → -s (system), -i (interactive), -c (copy)
+PsLoggedOn → Logged-on users
+Handle → Open handles (files, keys, etc.)
+ListDLLs → listdlls.exe <process>
+Sigcheck → sigcheck -m <exe> (signature + version)
+Strings → Extract text from binaries
+
+Memory Forensics Methodology (Quick Checklist)
+
+Identify rogue processes: pslist vs psscan (hidden/misspelled)
+Analyze DLLs & handles: dlllist, dlldump
+Network artifacts: connections list
+Code injection: malfind
+Dump suspicious: procdump, memdump, filescan, svcscan
+Rootkit hunt: psscan, devicetree
+
+Active Directory / User Hunting (PowerShell)
+
+Expired but enabled accounts (last names, comma-separated):
+(Get-ADUser -Filter {Enabled -eq $true} -Properties AccountExpirationDate | Where-Object {$_.AccountExpirationDate -lt (Get-Date) -and $_.AccountExpirationDate -ne $null} | Sort-Object Surname | Select -Expand Surname) -join ','
+Find by email: Get-ADUser -Filter {Mail -eq 'user@domain.com'} -Properties Name,Mail
+Password never expires: Search-ADAccount -PasswordNeverExpires | Where Enabled
+Reversible encryption: Get-ADUser -Filter 'userAccountControl -band 128'
 
 
 
