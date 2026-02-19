@@ -217,6 +217,75 @@ Get-ADUser -Filter 'UserAccountControl -band 128' -Properties UserAccountControl
 
 > Get-LocalUser | Where-Object { $_.Name -like "tiff*" }
 
+Windows – Top Persistence Hunting Commands (PowerShell preferred)
+
+AutoRuns is king → Download Sysinternals Autoruns → run as admin → hide Microsoft / Windows entries → look for anything odd (unsigned, unusual path, user-writable locations).
+Run / RunOnce keys (logon persistence – very common)PowerShellGet-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run", "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Run", "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" | fl *
+Scheduled Tasks (high privilege, stealthy)PowerShellGet-ScheduledTask | Where-Object {$_.TaskPath -notlike "\Microsoft\Windows\*"} | Select TaskName, TaskPath, State, Author, Description, Actions | fl
+# Or raw XML dump (shows hidden / deleted tasks sometimes)
+Get-ChildItem -Path "C:\Windows\System32\Tasks" -Recurse | ForEach { [xml](Get-Content $_.FullName) } | Select -ExpandProperty Task | Select Actions, Principals, Triggers
+Services (kernel/user-mode persistence)PowerShellGet-CimInstance Win32_Service | Where StartName -notlike "LocalSystem" -and StartName -notlike "NT AUTHORITY\*" | Select Name, DisplayName, PathName, StartName, StartMode | Sort PathName
+# Suspicious path hunting
+Get-WmiObject Win32_Service | ? {$_.PathName -like "*%*" -or $_.PathName -like "*powershell*" -or $_.PathName -like "*cmd*"} | Select Name, PathName
+WMI Event Subscriptions (very stealthy, no file on disk sometimes)PowerShellGet-WmiObject -Namespace root\subscription -Class __EventFilter   | Select Name, Query
+Get-WmiObject -Namespace root\subscription -Class __EventConsumer | Select Name, CommandLineTemplate, ScriptText
+Get-WmiObject -Namespace root\subscription -Class __FilterToConsumerBinding
+Startup Folders + UserInit / AppInit_DLLsPowerShellGet-ChildItem "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup", "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup" -Recurse
+Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name Userinit, Shell
+Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" -Name AppInit_DLLs -ErrorAction SilentlyContinue
+Network + process correlation (catch C2 / backdoors)PowerShellGet-NetTCPConnection -State Established,Listen | Select LocalAddress, LocalPort, RemoteAddress, RemotePort, OwningProcess | Join-Object -Right (Get-Process) -On OwningProcess -Property Id,ProcessName,Path
+# Or classic
+netstat -ano | findstr "ESTABLISHED LISTENING"
+PowerShell profiles (stealth logon script)PowerShell$PROFILE | fl *
+Get-Content $PROFILE -ErrorAction SilentlyContinue
+# All profiles
+Get-ChildItem "$env:ProgramFiles\WindowsPowerShell\Modules", "$env:USERPROFILE\Documents\WindowsPowerShell" -Recurse -Include profile.ps1 -ErrorAction SilentlyContinue
+Quick one-liner suspicious process huntPowerShellGet-Process | Where Path -notlike "*\Windows\*" -and Path -notlike "*\Program Files*" | Select Name, Id, Path, Company, Description | Sort Path
+
+Linux – Top Persistence Hunting Commands
+
+Systemd everywhere (most modern distros)Bashsystemctl list-unit-files --type=service | grep enabled
+systemctl list-units    --type=service --state=running
+# Suspicious custom units
+find /etc/systemd /usr/lib/systemd -type f -name "*.service" -o -name "*.timer" 2>/dev/null | xargs grep -Ei "ExecStart|ExecStop|WorkingDirectory|User|Group"
+systemctl list-timers --all
+Cron / at / anacron (classic & still everywhere)Bashcrontab -l -u root; for u in $(cut -f1 -d: /etc/passwd); do crontab -l -u $u 2>/dev/null; done
+ls -la /etc/cron* /var/spool/cron/crontabs/ /var/spool/anacron/
+cat /etc/crontab /etc/anacrontab
+find /etc/cron.* -type f -exec cat {} +
+Shell profiles & rc files (logon / sudo persistence)Bashgrep -rE "wget|curl|nc|bash -i|python -c|perl -e|sh -i" /etc/profile /etc/profile.d/ ~/.bash* ~/.zsh* ~/.profile /etc/bash.bashrc /etc/zsh/zprofile 2>/dev/null
+cat ~/.bashrc ~/.bash_profile ~/.zshrc /etc/skel/.bashrc
+SSH authorized_keys (backdoor accounts)Bashfind /home /root -name authorized_keys -exec grep -H "ssh-rsa\|ecdsa\|ed25519" {} \; 2>/dev/null
+awk -F: '$3 >= 1000 {print $1,$6}' /etc/passwd | while read u h; do [ -f "$h/.ssh/authorized_keys" ] && echo "$u -> $h/.ssh/authorized_keys"; done
+PAM & sudoers (privilege abuse)Bashgrep -rEi "session.*required|optional" /etc/pam.d/ /etc/pam.conf
+visudo -c -f /etc/sudoers; find /etc/sudoers.d -type f -exec cat {} +
+Kernel modules & LD_PRELOAD (rootkit level)Bashlsmod | grep -v "^Module"
+cat /etc/ld.so.preload 2>/dev/null
+find /lib /usr/lib -name "*.so" -mtime -7 2>/dev/null   # recent .so files
+Boot & init persistenceBashcat /etc/rc.local /etc/init.d/* /etc/xdg/autostart/* 2>/dev/null
+systemctl get-default   # graphical vs multi-user
+cat /boot/grub/grub.cfg | grep -i linux   # look for init= or weird params
+Quick suspicious binary / network huntBashnetstat -tulpn 2>/dev/null || ss -tulpn
+lsof -i -P -n | grep ESTABLISHED
+ps auxf | grep -E "nc|netcat|bash -i|python -c|perl|sh -c"
+find /tmp /var/tmp /dev/shm -type f -executable -mtime -3 2>/dev/null
+
+Fast Workflow Summary (no fluff)
+Windows (5–10 min sweep)
+
+Autoruns (GUI) → first
+Run keys + services + scheduled tasks (PowerShell)
+WMI subscriptions
+Netstat / Get-NetTCPConnection + process correlation
+
+Linux (5–10 min sweep)
+
+systemd services/timers
+All cron variants + /etc/crontab
+Shell profiles + .ssh/authorized_keys
+netstat/ss + ps auxf + recent executables in /tmp /dev/shm
+
+Run these as root/admin. Pipe to | grep -iE "suspicious|http|tcp|127|169|curl|wget|nc|bash|python"
 
 
 
