@@ -9,7 +9,7 @@ enable Sysmon for deeper/long-term logging
 
 
 Windows Persistence Paths/Locations
-
+HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\<SID>
 HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
 HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
 HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
