@@ -21,6 +21,8 @@ Get-ADUser | findstr "wis"
 Get-LocalUser | Where-Object { $_.Name -like "tiff*" }
 Get-Service -Name "mpssvc" | Get-Member
 
+
+
 sysinternal tools setup
 Recommended workflow for persistence/malware hunt:
 
@@ -55,7 +57,11 @@ C:\Windows\System32\utilman.exe
 C:\Windows\System32\magnify.exe
 HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
 
-
+To Find out if sysv or systemd
+ps -p 1 -o comm=
+output ->
+systemd = systemd 
+sysv = init
 
 Linux Persistence Paths/Locations
 /var/log
