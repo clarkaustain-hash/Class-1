@@ -1,0 +1,37 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" version="29.6.1">
+  <diagram name="Page-1" id="e6bqYnXoeuz0Wn5jdUmN">
+    <mxGraphModel dx="815" dy="444" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="EInLwPT5mzCGY7RSgXPl-1" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="" vertex="1">
+          <mxGeometry height="80" width="80" x="140" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="EInLwPT5mzCGY7RSgXPl-2" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="" vertex="1">
+          <mxGeometry height="80" width="80" x="290" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="EInLwPT5mzCGY7RSgXPl-3" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="" vertex="1">
+          <mxGeometry height="80" width="80" x="440" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="EInLwPT5mzCGY7RSgXPl-4" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="atropia&lt;div&gt;external:&lt;/div&gt;&lt;div&gt;10.50.11.222&lt;/div&gt;&lt;div&gt;internal: 10.3.0.10/24&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="150" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="EInLwPT5mzCGY7RSgXPl-5" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="pineland&lt;div&gt;external 10.50.200.173&lt;/div&gt;&lt;div&gt;internal:&lt;/div&gt;&lt;div&gt;10.2.0.1/24&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="300" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="EInLwPT5mzCGY7RSgXPl-6" parent="1" style="text;whiteSpace=wrap;html=1;" value="(UNKNOWN) [10.2.0.1] 23 (telnet) open : Operation now in progress &#xa;(UNKNOWN) [10.2.0.2] 21 (ftp) open : Operation now in progress &#xa;(UNKNOWN) [10.2.0.1] 22 (ssh) open : Operation now in progress &#xa;(UNKNOWN) [10.2.0.2] 80 (http) open : Operation now in progress &#xa;(UNKNOWN) [10.2.0.1] 80 (http) open : Operation now in progress &#xa;(UNKNOWN) [10.2.0.3] 23 (telnet) open : Operation now in progress &#xa;(UNKNOWN) [10.2.0.3] 22 (ssh) open : Operation now in progress &#xa;(UNKNOWN) [10.2.0.254] 80 (http) open : Operation now in progress" vertex="1">
+          <mxGeometry height="140" width="400" x="580" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="EInLwPT5mzCGY7RSgXPl-7" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="atlanica" vertex="1">
+          <mxGeometry height="30" width="60" x="450" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="EInLwPT5mzCGY7RSgXPl-8" parent="1" style="text;whiteSpace=wrap;html=1;" value="You have accessed the Atlantica government server. There is nothing interesting on this server, however, it used to have access to the 10.4.0.0/24 and 10.5.0.0/24 networks until the admins shut it down. Try to access those networks through another way. &#xa;net5_student14@tunnels-training-atlantica-piv" vertex="1">
+          <mxGeometry height="80" width="560" x="200" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="EInLwPT5mzCGY7RSgXPl-9" parent="1" style="text;whiteSpace=wrap;html=1;" value="(UNKNOWN) [10.5.0.1] 21 (ftp) open : Operation now in progress &#xa;(UNKNOWN) [10.5.0.1] 80 (http) open : Operation now in progress &#xa;(UNKNOWN) [10.5.0.57] 21 (ftp) open : Operation now in progress &#xa;(UNKNOWN) [10.5.0.57] 80 (http) open : Operation now in progress &#xa;(UNKNOWN) [10.5.0.254] 80 (http) open : Operation now in progress &#xa;student@blue-internet-host:~$ proxychains" vertex="1">
+          <mxGeometry height="110" width="400" x="270" y="530" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
